@@ -40,7 +40,7 @@ jobs:
             chmod 600 .env  # Secure file permissions
 
             echo "🔨 Building Go application..."
-            go build -o myapp ./main.go
+            go build -o main
 
             echo "📦 Backing up the current version..."
             if [ -L /home/ubuntu/app/current ]; then
