@@ -42,15 +42,24 @@ jobs:
             echo "🔨 Building Go application..."
             go build -o main
 
+            echo "📦 Checking Backup Directory..."
+            if [ ! -d "/home/ubuntu/app-backup" ]; then
+                mkdir -p /home/ubuntu/app-backup
+            fi
+
             echo "📦 Backing up the current version..."
-            if [ -L /home/ubuntu/app/current ]; then
-              CURRENT_VERSION=$(readlink -f /home/ubuntu/app/current)
-              mv $CURRENT_VERSION /home/ubuntu/app-backup
+            if [ -d "/home/ubuntu/app/current" ]; then
+                # Remove any existing backup
+                if [ -f "/home/ubuntu/app-backup/app-$BUILD_ID.zip" ]; then
+                    rm -f /home/ubuntu/app-backup/app-$BUILD_ID.zip
+                fi
+
+                # Create a new backup
+                zip -r /home/ubuntu/app-backup/app-$BUILD_ID.zip /home/ubuntu/app/current
             fi
 
             echo "📦 Creating symlink for Blue-Green Deployment..."
             ln -sfn /home/ubuntu/deployments/app-$BUILD_ID/* /home/ubuntu/app/current/
-            # ln -sfn $NEW_DEPLOY_DIR /home/ubuntu/app/current
 
             echo "🚀 Restarting application using systemd..."
             sudo systemctl restart myapp.service
@@ -60,6 +69,7 @@ jobs:
             if ! systemctl is-active --quiet myapp.service; then
               echo "⚠️ Deployment failed! Rolling back..."
               if [ -d "/home/ubuntu/app-backup" ]; then
+                unzip app-$BUILD_ID.zip
                 ln -sfn /home/ubuntu/app-backup /home/ubuntu/app/current
                 sudo systemctl restart myapp.service
                 echo "✅ Rolled back to previous working version!"
