@@ -1,0 +1,70 @@
+name: Deploy Go App to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔑 SSH into EC2 and Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AWS_HOST }}
+          username: ${{ secrets.AWS_USERNAME }}
+          key: ${{ secrets.AWS_PRIVATE_KEY }}
+          script: |
+            set -e  # Exit on error
+
+            echo "🔹 Logging into EC2 instance..."
+            cd /home/ubuntu/deployments
+
+            # Use GitHub Actions Build ID as deployment version
+            BUILD_ID=${{ github.run_id }}
+            NEW_DEPLOY_DIR="/home/ubuntu/deployments/app-$BUILD_ID"
+
+            echo "🚀 Cloning latest code from GitHub..."
+            git clone https://github.com/AswinVilasP/go-web-app.git $NEW_DEPLOY_DIR
+            cd $NEW_DEPLOY_DIR
+
+            echo "🛠 Installing dependencies..."
+            go mod tidy
+
+            echo "📦 Creating .env file from GitHub Secrets..."
+            echo "${{ secrets.ENV_FILE }}" > .env
+            chmod 600 .env  # Secure file permissions
+
+            echo "🔨 Building Go application..."
+            go build -o myapp ./main.go
+
+            echo "📦 Backing up the current version..."
+            if [ -L /home/ubuntu/app/current ]; then
+              CURRENT_VERSION=$(readlink -f /home/ubuntu/app/current)
+              mv $CURRENT_VERSION /home/ubuntu/deployments/app-backup
+            fi
+
+            echo "📦 Creating symlink for Blue-Green Deployment..."
+            ln -sfn $NEW_DEPLOY_DIR /home/ubuntu/app/current
+
+            echo "🚀 Restarting application using systemd..."
+            sudo systemctl restart myapp.service
+
+            echo "🩺 Checking if the application is running correctly..."
+            sleep 5
+            if ! systemctl is-active --quiet myapp.service; then
+              echo "⚠️ Deployment failed! Rolling back..."
+              if [ -d "/home/ubuntu/deployments/app-backup" ]; then
+                ln -sfn /home/ubuntu/deployments/app-backup /home/ubuntu/app/current
+                sudo systemctl restart myapp.service
+                echo "✅ Rolled back to previous working version!"
+              fi
+              exit 1  # Fail the GitHub Actions pipeline
+            fi
+
+            echo "🧹 Cleaning up older versions (keeping only one backup)..."
+            ls -dt /home/ubuntu/deployments/app-* | grep -v "app-$BUILD_ID" | grep -v "app-backup" | xargs rm -rf || true
+
+            echo "✅ Deployment successful!"
