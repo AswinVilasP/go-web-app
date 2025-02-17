@@ -45,7 +45,7 @@ jobs:
             echo "📦 Backing up the current version..."
             if [ -L /home/ubuntu/app/current ]; then
               CURRENT_VERSION=$(readlink -f /home/ubuntu/app/current)
-              mv $CURRENT_VERSION /home/ubuntu/deployments/app-backup
+              mv $CURRENT_VERSION /home/ubuntu/app-backup
             fi
 
             echo "📦 Creating symlink for Blue-Green Deployment..."
