@@ -18,6 +18,8 @@ jobs:
           key: ${{ secrets.AWS_PRIVATE_KEY }}
           script: |
             set -e  # Exit on error
+            export PATH=\$PATH:/usr/local/go/bin
+            export PATH=$PATH:/bin:/usr/bin:/usr/local/bin
 
             echo "🔹 Logging into EC2 instance..."
             cd /home/ubuntu/deployments
