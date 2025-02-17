@@ -59,8 +59,8 @@ jobs:
             sleep 5
             if ! systemctl is-active --quiet myapp.service; then
               echo "⚠️ Deployment failed! Rolling back..."
-              if [ -d "/home/ubuntu/deployments/app-backup" ]; then
-                ln -sfn /home/ubuntu/deployments/app-backup /home/ubuntu/app/current
+              if [ -d "/home/ubuntu/app-backup" ]; then
+                ln -sfn /home/ubuntu/app-backup /home/ubuntu/app/current
                 sudo systemctl restart myapp.service
                 echo "✅ Rolled back to previous working version!"
               fi
