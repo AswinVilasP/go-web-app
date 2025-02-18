@@ -78,6 +78,7 @@ jobs:
                 unzip /home/ubuntu/app-backup/app-backup.zip -d /home/ubuntu/test
                 mv /home/ubuntu/test/* /home/ubuntu/app-backup/
                 ln -sfn /home/ubuntu/app-backup/* /home/ubuntu/app/current/
+                sleep 5
                 sudo systemctl restart myapp.service
                 echo "✅ Rolled back to previous working version!"
               fi
