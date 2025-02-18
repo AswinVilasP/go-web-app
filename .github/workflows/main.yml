@@ -85,7 +85,7 @@ jobs:
               exit 1  # Fail the GitHub Actions pipeline
             fi
 
-            echo "🧹 Cleaning up older versions (keeping only one backup)..."
-            ls -dt /home/ubuntu/deployments/app-* | grep -v "app-$BUILD_ID" | grep -v "app-backup" | xargs rm -rf || true
+            # echo "🧹 Cleaning up older versions (keeping only one backup)..."
+            # ls -dt /home/ubuntu/deployments/app-* | grep -v "app-$BUILD_ID" | grep -v "app-backup" | xargs rm -rf || true
 
             echo "✅ Deployment successful!"
