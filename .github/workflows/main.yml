@@ -26,7 +26,7 @@ jobs:
 
             # Use GitHub Actions Build ID as deployment version
             BUILD_ID=${{ github.run_id }}
-            NEW_DEPLOY_DIR="/home/ubuntu/deployments/app-$BUILD_ID"
+            NEW_DEPLOY_DIR="/home/ubuntu/staging
 
             echo "🚀 Cloning latest code from GitHub..."
             git clone https://github.com/AswinVilasP/go-web-app.git $NEW_DEPLOY_DIR
@@ -39,52 +39,29 @@ jobs:
             echo "${{ secrets.ENV_FILE }}" > .env
             chmod 600 .env  # Secure file permissions
 
-            # echo "🔨 Building Go application..."
-            # go build -o main
+            echo "🔨 Building Go application..."
+            go build -o main
 
             echo "📦 Checking Backup Directory..."
-            if [ ! -d "/home/ubuntu/app-backup" ]; then
-                mkdir -p /home/ubuntu/app-backup
+            if [ ! -d "/home/ubuntu/backups" ]; then
+                mkdir -p /home/ubuntu/backups
             fi
 
+            echo "❌ Removing the old backup version..."
+            rm -rf /home/ubuntu/backups/*
+
             echo "📦 Backing up the current version..."
-            # if [ -d "/home/ubuntu/app/current" ]; then
-            #     # Remove any existing backup
-            #     if [ -f "/home/ubuntu/app-backup/app-$BUILD_ID.zip" ]; then
-            #         rm -f /home/ubuntu/app-backup/app-$BUILD_ID.zip
-            #     fi
+            zip -r /home/ubuntu/backups/app.zip /home/ubuntu/current/*
 
-                # Create a new backup
-            # zip -r /home/ubuntu/app-backup/app-backup.zip /home/ubuntu/app/current
-            # fi
-
-            echo "📦 Creating symlink for Blue-Green Deployment..."
-            rm -rf /home/ubuntu/app/current/*
-            ln -sfn /home/ubuntu/deployments/app-$BUILD_ID/* /home/ubuntu/app/current/
+            echo "📦 Updating current directory source code"
+            rm -rf /home/ubuntu/current/*
+            mv /home/ubuntu/staging/* /home/ubuntu/current
+            ls /home/ubuntu/current
 
             echo "🚀 Restarting application using systemd..."
             sudo systemctl restart myapp.service
             
             echo "🩺 Checking if the application is running correctly..."
-            sleep 5
-            if ! systemctl is-active --quiet myapp.service; then
-              echo "⚠️ Deployment failed! Rolling back..."
-              if [ -d "/home/ubuntu/app-backup" ]; then
-                unzip /home/ubuntu/app-backup/app-backup.zip -d /home/ubuntu/test
-                mv /home/ubuntu/test/* /home/ubuntu/app-backup/
-                ln -sfn /home/ubuntu/app-backup/* /home/ubuntu/app/current/
-                sleep 5
-                sudo systemctl restart myapp.service
-                if ! systemctl is-active --quiet myapp.service; then
-                  echo "❌ Rollback failed! The application is still not running."
-                  exit 1
-                fi
-                echo "✅ Rolled back to previous working version!"
-              fi
-              exit 1  # Fail the GitHub Actions pipeline
-            fi
-
-            # echo "🧹 Cleaning up older versions (keeping only one backup)..."
-            # ls -dt /home/ubuntu/deployments/app-* | grep -v "app-$BUILD_ID" | grep -v "app-backup" | xargs rm -rf || true
+             sudo systemctl status myapp.service
 
             echo "✅ Deployment successful!"
