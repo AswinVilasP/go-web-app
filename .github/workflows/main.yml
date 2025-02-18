@@ -65,11 +65,6 @@ jobs:
             echo "🚀 Restarting application using systemd..."
             sudo systemctl restart myapp.service
             
-            export GO111MODULE=on
-            export GOPROXY=direct
-            export GOSUMDB=off
-            export DEBIAN_FRONTEND=noninteractive
-            
             echo "🩺 Checking if the application is running correctly..."
             sleep 5
             if ! systemctl is-active --quiet myapp.service; then
@@ -80,6 +75,10 @@ jobs:
                 ln -sfn /home/ubuntu/app-backup/* /home/ubuntu/app/current/
                 sleep 5
                 sudo systemctl restart myapp.service
+                if ! systemctl is-active --quiet myapp.service; then
+                  echo "❌ Rollback failed! The application is still not running."
+                  exit 1
+                fi
                 echo "✅ Rolled back to previous working version!"
               fi
               exit 1  # Fail the GitHub Actions pipeline
