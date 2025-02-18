@@ -39,8 +39,8 @@ jobs:
             echo "${{ secrets.ENV_FILE }}" > .env
             chmod 600 .env  # Secure file permissions
 
-            echo "🔨 Building Go application..."
-            go build -o main
+            # echo "🔨 Building Go application..."
+            # go build -o main
 
             echo "📦 Checking Backup Directory..."
             if [ ! -d "/home/ubuntu/app-backup" ]; then
