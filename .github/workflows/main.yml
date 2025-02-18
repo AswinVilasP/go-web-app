@@ -48,15 +48,15 @@ jobs:
             fi
 
             echo "📦 Backing up the current version..."
-            if [ -d "/home/ubuntu/app/current" ]; then
-                # Remove any existing backup
-                if [ -f "/home/ubuntu/app-backup/app-$BUILD_ID.zip" ]; then
-                    rm -f /home/ubuntu/app-backup/app-$BUILD_ID.zip
-                fi
+            # if [ -d "/home/ubuntu/app/current" ]; then
+            #     # Remove any existing backup
+            #     if [ -f "/home/ubuntu/app-backup/app-$BUILD_ID.zip" ]; then
+            #         rm -f /home/ubuntu/app-backup/app-$BUILD_ID.zip
+            #     fi
 
                 # Create a new backup
-                zip -r /home/ubuntu/app-backup/app-$BUILD_ID.zip /home/ubuntu/app/current
-            fi
+            zip -r /home/ubuntu/app-backup/app-backup.zip /home/ubuntu/app/current
+            # fi
 
             echo "📦 Creating symlink for Blue-Green Deployment..."
             # rm -rf /home/ubuntu/app/current/*
@@ -70,7 +70,7 @@ jobs:
             if ! systemctl is-active --quiet myapp.service; then
               echo "⚠️ Deployment failed! Rolling back..."
               if [ -d "/home/ubuntu/app-backup" ]; then
-                unzip app-$BUILD_ID.zip
+                unzip app-backup.zip
                 ln -sfn /home/ubuntu/app-backup /home/ubuntu/app/current
                 sudo systemctl restart myapp.service
                 echo "✅ Rolled back to previous working version!"
