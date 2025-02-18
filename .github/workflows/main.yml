@@ -39,8 +39,8 @@ jobs:
             echo "${{ secrets.ENV_FILE }}" > .env
             chmod 600 .env  # Secure file permissions
 
-            echo "🔨 Building Go application..."
-            go build -o main
+            # echo "🔨 Building Go application..."
+            # go build -o main
 
             echo "📦 Checking Backup Directory..."
             if [ ! -d "/home/ubuntu/app-backup" ]; then
@@ -55,11 +55,11 @@ jobs:
             #     fi
 
                 # Create a new backup
-            zip -r /home/ubuntu/app-backup/app-backup.zip /home/ubuntu/app/current
+            # zip -r /home/ubuntu/app-backup/app-backup.zip /home/ubuntu/app/current
             # fi
 
             echo "📦 Creating symlink for Blue-Green Deployment..."
-            # rm -rf /home/ubuntu/app/current/*
+            rm -rf /home/ubuntu/app/current/*
             ln -sfn /home/ubuntu/deployments/app-$BUILD_ID/* /home/ubuntu/app/current/
 
             echo "🚀 Restarting application using systemd..."
@@ -71,7 +71,7 @@ jobs:
               echo "⚠️ Deployment failed! Rolling back..."
               if [ -d "/home/ubuntu/app-backup" ]; then
                 unzip app-backup.zip
-                ln -sfn /home/ubuntu/app-backup /home/ubuntu/app/current
+                ln -sfn /home/ubuntu/app-backup/* /home/ubuntu/app/current/
                 sudo systemctl restart myapp.service
                 echo "✅ Rolled back to previous working version!"
               fi
