@@ -64,7 +64,12 @@ jobs:
 
             echo "🚀 Restarting application using systemd..."
             sudo systemctl restart myapp.service
-
+            
+            export GO111MODULE=on
+            export GOPROXY=direct
+            export GOSUMDB=off
+            export DEBIAN_FRONTEND=noninteractive
+            
             echo "🩺 Checking if the application is running correctly..."
             sleep 5
             if ! systemctl is-active --quiet myapp.service; then
